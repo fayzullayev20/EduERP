@@ -41,7 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    "auth",
+    "authentication",
     "users",
     "common",
 
@@ -160,4 +160,4 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-AUTH_USER_MODEL = "auth.User"
+AUTH_USER_MODEL = "users.User"
