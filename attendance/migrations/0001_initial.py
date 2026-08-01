@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('status', models.BooleanField()),
-                ('attendance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='records', to='attandance.attendance')),
+                ('attendance', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='records', to='attendance.attendance')),
                 ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='attendance_records', to='student.student')),
             ],
             options={
@@ -37,6 +37,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='attendance',
             name='students',
-            field=models.ManyToManyField(related_name='attendances', through='attandance.AttendanceRecord', to='student.student'),
+            field=models.ManyToManyField(related_name='attendances', through='attendance.AttendanceRecord', to='student.student'),
         ),
     ]
