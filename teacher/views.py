@@ -1,6 +1,6 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 
 from .models import Teacher, Subject, TeacherWorkload, Transaction, Contract
 from .serializers import (
@@ -19,6 +19,14 @@ class TeachersView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
+        # Teacher.owner OneToOneField bo'lgani uchun bitta userga faqat
+        # bitta teacher profili tegishli bo'lishi mumkin. Buni oldindan
+        # tekshirib, chiroyli xato qaytaramiz — aks holda foydalanuvchi
+        # xom IntegrityError (500) ko'rib qoladi.
+        if Teacher.objects.filter(owner=self.request.user).exists():
+            raise ValidationError(
+                {"detail": "Sizda allaqachon teacher profili mavjud."}
+            )
         serializer.save(owner=self.request.user)
 
 

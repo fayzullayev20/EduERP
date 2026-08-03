@@ -1,7 +1,21 @@
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
+
+# Shartnoma fayli uchun cheklovlar: faqat hujjat formatlari va 10MB gacha.
+CONTRACT_FILE_MAX_SIZE_MB = 10
+CONTRACT_ALLOWED_EXTENSIONS = ["pdf", "doc", "docx"]
+
+
+def validate_contract_file_size(file):
+    max_bytes = CONTRACT_FILE_MAX_SIZE_MB * 1024 * 1024
+    if file.size > max_bytes:
+        raise ValidationError(
+            f"Fayl hajmi {CONTRACT_FILE_MAX_SIZE_MB}MB dan oshmasligi kerak."
+        )
 
 
 class Subject(models.Model):
@@ -104,10 +118,17 @@ class Contract(models.Model):
     number = models.CharField(max_length=50, unique=True)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
-    file = models.FileField(upload_to="contracts/", null=True, blank=True)
+    file = models.FileField(
+        upload_to="contracts/",
+        null=True,
+        blank=True,
+        validators=[
+            FileExtensionValidator(allowed_extensions=CONTRACT_ALLOWED_EXTENSIONS),
+            validate_contract_file_size,
+        ],
+    )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Shartnoma #{self.number} - {self.teacher}"
-    

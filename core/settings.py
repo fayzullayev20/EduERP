@@ -25,9 +25,22 @@ load_dotenv(BASE_DIR / ".env")
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-DEBUG = os.getenv("DEBUG", "True").lower() == "true"
+# Xavfsizlik uchun DEBUG standart holatda O'CHIQ (False).
+# Faqat .env faylida DEBUG=True deb aniq ko'rsatilsa yoqiladi.
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-ALLOWED_HOSTS = ["*"]
+# .env da ALLOWED_HOSTS=example.com,www.example.com kabi vergul bilan
+# ajratilgan ro'yxat beriladi. Hech narsa berilmasa va DEBUG=True bo'lsa,
+# lokal ishlab chiqish uchun "*" ishlatiladi; aks holda bo'sh ro'yxat
+# (production'da bu Django'ni xato berishga majbur qiladi va domen
+# ko'rsatishni eslatadi — bu ataylab qilingan xavfsizlik to'sig'i).
+_allowed_hosts_env = os.getenv("ALLOWED_HOSTS", "")
+if _allowed_hosts_env:
+    ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(",") if h.strip()]
+elif DEBUG:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -135,3 +148,17 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Django REST Framework
+# https://www.django-rest-framework.org/api-guide/settings/
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.BasicAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}
