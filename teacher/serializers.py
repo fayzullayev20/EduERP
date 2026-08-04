@@ -1,5 +1,13 @@
 from rest_framework import serializers
-from .models import Teacher, Subject, TeacherWorkload, Transaction, Contract
+from .models import (
+    Teacher,
+    Subject,
+    TeacherWorkload,
+    Transaction,
+    Contract,
+    HomeWork,
+    StudentGamification,
+)
 
 
 class SubjectSerializer(serializers.ModelSerializer):
@@ -33,6 +41,33 @@ class TeacherSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["owner"]
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        is_owner = bool(user and user.is_authenticated and instance.owner_id == user.id)
+        is_staff = bool(user and user.is_staff)
+        if not (is_owner or is_staff):
+            data.pop("amount", None)
+            data.pop("salary_type", None)
+        return data
+
+    def create(self, validated_data):
+        request = self.context.get("request")
+        is_staff = bool(request and request.user and request.user.is_staff)
+        if not is_staff:
+            validated_data.pop("amount", None)
+            validated_data.pop("salary_type", None)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        is_staff = bool(request and request.user and request.user.is_staff)
+        if not is_staff:
+            validated_data.pop("amount", None)
+            validated_data.pop("salary_type", None)
+        return super().update(instance, validated_data)
+
 
 class TeacherWorkloadSerializer(serializers.ModelSerializer):
     class Meta:
@@ -53,3 +88,25 @@ class ContractSerializer(serializers.ModelSerializer):
         model = Contract
         fields = ["id", "teacher", "number", "start_date", "end_date", "file", "is_active", "created_at"]
         read_only_fields = ["created_at"]
+
+
+class HomeWorkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HomeWork
+        fields = [
+            "id",
+            "lesson",
+            "description",
+            "max_score",
+            "status",
+            "due_date",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class StudentGamificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentGamification
+        fields = ["id", "student", "xp", "level"]
+        read_only_fields = ["id"]

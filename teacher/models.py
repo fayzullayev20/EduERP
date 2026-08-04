@@ -1,12 +1,16 @@
+import uuid
+
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
+from group.models import Lessons
+from student.models import Student
+
 User = get_user_model()
 
-# Shartnoma fayli uchun cheklovlar: faqat hujjat formatlari va 10MB gacha.
-CONTRACT_FILE_MAX_SIZE_MB = 10
+CONTRACT_FILE_MAX_SIZE_MB = 15  
 CONTRACT_ALLOWED_EXTENSIONS = ["pdf", "doc", "docx"]
 
 
@@ -132,3 +136,39 @@ class Contract(models.Model):
 
     def __str__(self):
         return f"Shartnoma #{self.number} - {self.teacher}"
+
+class HomeWork(models.Model):
+
+    class Status(models.IntegerChoices):
+        DRAFT = 0, "Draft"
+        PUBLISHED = 1, "Published"
+        CLOSED = 2, "Closed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    lesson = models.ForeignKey(
+        Lessons,
+        on_delete=models.CASCADE,
+        related_name="homeworks"
+    )
+    description = models.TextField()
+    max_score = models.PositiveIntegerField()
+    status = models.IntegerField(choices=Status.choices, default=Status.DRAFT)
+    due_date = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Uy vazifa - {self.lesson} (due {self.due_date:%Y-%m-%d})"
+
+
+class StudentGamification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    student = models.OneToOneField(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="gamification"
+    )
+    xp = models.PositiveIntegerField(default=0)
+    level = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.student} - level {self.level} ({self.xp} XP)"

@@ -3,8 +3,17 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from group.models import Group
-from .models import Teacher, Subject, TeacherWorkload, Transaction, Contract
+from group.models import Group, Lessons
+from student.models import Student
+from .models import (
+    Teacher,
+    Subject,
+    TeacherWorkload,
+    Transaction,
+    Contract,
+    HomeWork,
+    StudentGamification,
+)
 
 User = get_user_model()
 
@@ -36,11 +45,14 @@ class BaseTeacherTestCase(APITestCase):
         self.teacher.subjects.add(self.subject_math)
 
         self.group = Group.objects.create(name="9-A")
+        self.lesson = Lessons.objects.create(
+            group=self.group, date="2026-08-03"
+        )
+        self.student = Student.objects.create(
+            first_name="Sardor", last_name="Aliyev"
+        )
 
 
-# ---------------------------------------------------------------------------
-# Subject
-# ---------------------------------------------------------------------------
 class SubjectAPITests(BaseTeacherTestCase):
 
     def test_list_subjects_requires_auth(self):
@@ -86,9 +98,6 @@ class SubjectAPITests(BaseTeacherTestCase):
         self.assertFalse(Subject.objects.filter(id=self.subject_phys.id).exists())
 
 
-# ---------------------------------------------------------------------------
-# Teacher
-# ---------------------------------------------------------------------------
 class TeacherAPITests(BaseTeacherTestCase):
 
     def test_list_teachers_requires_auth(self):
@@ -197,9 +206,6 @@ class MyTeacherProfileAPITests(BaseTeacherTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
-# ---------------------------------------------------------------------------
-# TeacherWorkload
-# ---------------------------------------------------------------------------
 class TeacherWorkloadAPITests(BaseTeacherTestCase):
 
     def setUp(self):
@@ -270,9 +276,6 @@ class TeacherWorkloadAPITests(BaseTeacherTestCase):
         self.assertFalse(TeacherWorkload.objects.filter(id=self.workload.id).exists())
 
 
-# ---------------------------------------------------------------------------
-# Transaction
-# ---------------------------------------------------------------------------
 class TransactionAPITests(BaseTeacherTestCase):
 
     def setUp(self):
@@ -344,9 +347,6 @@ class TransactionAPITests(BaseTeacherTestCase):
         self.assertFalse(Transaction.objects.filter(id=self.transaction.id).exists())
 
 
-# ---------------------------------------------------------------------------
-# Contract
-# ---------------------------------------------------------------------------
 class ContractAPITests(BaseTeacherTestCase):
 
     def setUp(self):
@@ -415,3 +415,152 @@ class ContractAPITests(BaseTeacherTestCase):
         response = self.client.delete(url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Contract.objects.filter(id=self.contract.id).exists())
+
+
+class HomeWorkAPITests(BaseTeacherTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.homework = HomeWork.objects.create(
+            lesson=self.lesson,
+            description="1-10 mashqlarni yeching",
+            max_score=100,
+            due_date="2026-08-10T00:00:00Z",
+        )
+
+    def test_list_homeworks(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("homeworks")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_list_homeworks_requires_auth(self):
+        url = reverse("homeworks")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_filter_homeworks_by_lesson(self):
+        other_lesson = Lessons.objects.create(group=self.group, date="2026-08-04")
+        HomeWork.objects.create(
+            lesson=other_lesson,
+            description="Boshqa dars uy vazifasi",
+            max_score=50,
+            due_date="2026-08-11T00:00:00Z",
+        )
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("homeworks")
+        response = self.client.get(url, {"lesson": self.lesson.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_create_homework(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("homeworks")
+        payload = {
+            "lesson": self.lesson.id,
+            "description": "Insho yozish",
+            "max_score": 20,
+            "status": HomeWork.Status.PUBLISHED,
+            "due_date": "2026-08-15T00:00:00Z",
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(HomeWork.objects.count(), 2)
+
+    def test_create_homework_missing_required_field_fails(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("homeworks")
+        payload = {"lesson": self.lesson.id, "max_score": 20}
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_homework(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("homework", args=[self.homework.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["description"], "1-10 mashqlarni yeching")
+
+    def test_update_homework_status(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("homework", args=[self.homework.id])
+        response = self.client.patch(url, {"status": HomeWork.Status.CLOSED})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.homework.refresh_from_db()
+        self.assertEqual(self.homework.status, HomeWork.Status.CLOSED)
+
+    def test_delete_homework(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("homework", args=[self.homework.id])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(HomeWork.objects.filter(id=self.homework.id).exists())
+
+
+class StudentGamificationAPITests(BaseTeacherTestCase):
+
+    def setUp(self):
+        super().setUp()
+        self.gamification = StudentGamification.objects.create(
+            student=self.student, xp=150, level=2
+        )
+
+    def test_list_gamifications(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("gamifications")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+
+    def test_filter_gamification_by_student(self):
+        other_student = Student.objects.create(first_name="Laylo", last_name="Karimova")
+        StudentGamification.objects.create(student=other_student, xp=10, level=1)
+
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("gamifications")
+        response = self.client.get(url, {"student": self.student.id})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["xp"], 150)
+
+    def test_create_gamification(self):
+        new_student = Student.objects.create(first_name="Jasur", last_name="Toshev")
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("gamifications")
+        payload = {"student": new_student.id, "xp": 0, "level": 1}
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(StudentGamification.objects.count(), 2)
+
+    def test_create_duplicate_gamification_for_same_student_fails(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("gamifications")
+        payload = {"student": self.student.id, "xp": 5, "level": 1}
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_retrieve_gamification(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("gamification", args=[self.gamification.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["level"], 2)
+
+    def test_update_gamification_xp(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("gamification", args=[self.gamification.id])
+        response = self.client.patch(url, {"xp": 500, "level": 5})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.gamification.refresh_from_db()
+        self.assertEqual(self.gamification.xp, 500)
+        self.assertEqual(self.gamification.level, 5)
+
+    def test_delete_gamification(self):
+        self.client.force_authenticate(user=self.owner_user)
+        url = reverse("gamification", args=[self.gamification.id])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(
+            StudentGamification.objects.filter(id=self.gamification.id).exists()
+        )

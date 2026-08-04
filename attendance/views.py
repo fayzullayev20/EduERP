@@ -23,8 +23,10 @@ class AttendancesView(generics.ListCreateAPIView):
         return AttendanceSerializer
 
     def get_queryset(self):
-        teacher = get_object_or_404(Teacher, owner=self.request.user)
-        qs = Attendance.objects.filter(group__teacher=teacher).order_by("-date")
+        qs = Attendance.objects.all().order_by("-date")
+        if not self.request.user.is_staff:
+            teacher = get_object_or_404(Teacher, owner=self.request.user)
+            qs = qs.filter(group__teacher=teacher)
 
         group_id = self.request.query_params.get("group")
         if group_id:
@@ -32,11 +34,12 @@ class AttendancesView(generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        teacher = get_object_or_404(Teacher, owner=self.request.user)
         group = serializer.validated_data.get("group")
-        if group.teacher_id != teacher.id:
-            from rest_framework.exceptions import PermissionDenied
-            raise PermissionDenied("Bu guruh sizga tegishli emas")
+        if not self.request.user.is_staff:
+            teacher = get_object_or_404(Teacher, owner=self.request.user)
+            if group.teacher_id != teacher.id:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Bu guruh sizga tegishli emas")
         serializer.save()
 
 
@@ -44,6 +47,15 @@ class AttendanceView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
     permission_classes = [IsAuthenticated, IsGroupTeacher]
+
+    def perform_update(self, serializer):
+        new_group = serializer.validated_data.get("group")
+        if new_group is not None and not self.request.user.is_staff:
+            teacher = get_object_or_404(Teacher, owner=self.request.user)
+            if new_group.teacher_id != teacher.id:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Bu guruhga o'tkazishga ruxsatingiz yo'q")
+        serializer.save()
 
 
 class AttendanceRecordsView(APIView):
@@ -72,6 +84,12 @@ class AttendanceMarkView(APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        if not attendance.group.students.filter(id=student_id).exists():
+            return Response(
+                {"error": "Bu student ushbu guruhga a'zo emas"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         record, _ = AttendanceRecord.objects.update_or_create(
             attendance=attendance,
             student_id=student_id,
@@ -88,13 +106,31 @@ class AttendanceRecordsListView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = super().get_queryset()
+        user = self.request.user
+        if not user.is_staff:
+            teacher = get_object_or_404(Teacher, owner=user)
+            qs = qs.filter(attendance__group__teacher_id=teacher.id)
+
         attendance_id = self.request.query_params.get("attendance")
         if attendance_id:
             qs = qs.filter(attendance_id=attendance_id)
         return qs
 
+    def perform_create(self, serializer):
+        attendance = serializer.validated_data.get("attendance")
+        student = serializer.validated_data.get("student")
+        if not self.request.user.is_staff:
+            teacher = get_object_or_404(Teacher, owner=self.request.user)
+            if attendance.group.teacher_id != teacher.id:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied("Bu guruh sizga tegishli emas")
+        if not attendance.group.students.filter(id=student.id).exists():
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError("Bu student ushbu guruhga a'zo emas")
+        serializer.save()
+
 
 class AttendanceRecordView(generics.RetrieveUpdateDestroyAPIView):
     queryset = AttendanceRecord.objects.all()
     serializer_class = AttendanceRecordSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsGroupTeacher]

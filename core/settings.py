@@ -161,4 +161,30 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
+    # HUJUM NUQTASI: hech qanday throttling yo'q edi — bu esa login
+    # (BasicAuthentication) va boshqa endpointlarga cheksiz brute-force /
+    # DoS hujumi qilish imkonini berardi. Minimal, oqilona limitlar
+    # qo'yildi; kerak bo'lsa view darajasida qattiqroq qilish mumkin.
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "30/minute",
+        "user": "120/minute",
+    },
 }
+
+# HUJUM NUQTASI: production'da (DEBUG=False) HTTPS-ga majburlash, cookie'
+# larni faqat HTTPS orqali yuborish va HSTS kabi asosiy himoya sozlamalari
+# umuman yo'q edi. BasicAuthentication yoqilgani uchun bu ayniqsa muhim —
+# aks holda login ma'lumotlari har bir so'rovda ochiq (HTTP) tarmoq
+# orqali ketishi mumkin edi.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True

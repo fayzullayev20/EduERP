@@ -34,10 +34,18 @@ class AttendanceCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         records_data = validated_data.pop("records", [])
         attendance = Attendance.objects.create(**validated_data)
+        enrolled_ids = set(
+            attendance.group.students.values_list("id", flat=True)
+        )
         for r in records_data:
+            student_id = r["student"]
+            if int(student_id) not in enrolled_ids:
+                raise serializers.ValidationError(
+                    f"Student #{student_id} bu guruhga a'zo emas"
+                )
             AttendanceRecord.objects.create(
                 attendance=attendance,
-                student_id=r["student"],
+                student_id=student_id,
                 status=r["status"],
             )
         return attendance

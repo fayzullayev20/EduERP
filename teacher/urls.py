@@ -1,4 +1,3 @@
-# teacher/urls.py
 from django.urls import path
 
 from .views import (
@@ -13,6 +12,10 @@ from .views import (
     TransactionView,
     ContractsView,
     ContractView,
+    HomeWorksView,
+    HomeWorkView,
+    StudentGamificationsView,
+    StudentGamificationView,
 )
 
 urlpatterns = [
@@ -31,4 +34,10 @@ urlpatterns = [
 
     path('contracts/', ContractsView.as_view(), name='contracts'),
     path('contracts/<int:pk>/', ContractView.as_view(), name='contract'),
+
+    path('homeworks/', HomeWorksView.as_view(), name='homeworks'),
+    path('homeworks/<uuid:pk>/', HomeWorkView.as_view(), name='homework'),
+
+    path('gamification/', StudentGamificationsView.as_view(), name='gamifications'),
+    path('gamification/<uuid:pk>/', StudentGamificationView.as_view(), name='gamification'),
 ]
