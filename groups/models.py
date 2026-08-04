@@ -23,13 +23,13 @@ class Group(models.Model):
     room = models.UUIDField(default=uuid.uuid4, editable=False)
     max_student = models.IntegerField(default=20)
     teacher = models.ForeignKey(
-        'Teacher', 
+        'teachers.Teacher', 
         on_delete=models.SET_NULL, 
         null=True, 
         related_name='groups'
     )
     students = models.ManyToManyField(
-        'Student', 
+        'students.Student', 
         related_name='enrolled_groups', 
         blank=True
     )
