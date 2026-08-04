@@ -16,6 +16,10 @@ from .views import (
     HomeWorkView,
     StudentGamificationsView,
     StudentGamificationView,
+    ExamsView,
+    ExamView,
+    ExamResultsView,
+    ExamResultView,
 )
 
 urlpatterns = [
@@ -40,4 +44,10 @@ urlpatterns = [
 
     path('gamification/', StudentGamificationsView.as_view(), name='gamifications'),
     path('gamification/<uuid:pk>/', StudentGamificationView.as_view(), name='gamification'),
+
+    path('exams/', ExamsView.as_view(), name='exams'),
+    path('exams/<uuid:pk>/', ExamView.as_view(), name='exam'),
+
+    path('exam-results/', ExamResultsView.as_view(), name='exam-results'),
+    path('exam-results/<uuid:pk>/', ExamResultView.as_view(), name='exam-result'),
 ]

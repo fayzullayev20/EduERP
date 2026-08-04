@@ -6,7 +6,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 from group.models import Lessons
-from student.models import Student
+from students.models import Student
 
 User = get_user_model()
 
@@ -158,6 +158,63 @@ class HomeWork(models.Model):
 
     def __str__(self):
         return f"Uy vazifa - {self.lesson} (due {self.due_date:%Y-%m-%d})"
+
+
+class Exam(models.Model):
+
+    class Status(models.IntegerChoices):
+        DRAFT = 0, "Draft"
+        PUBLISHED = 1, "Published"
+        CLOSED = 2, "Closed"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    lesson = models.ForeignKey(
+        Lessons,
+        on_delete=models.CASCADE,
+        related_name="exams"
+    )
+    title = models.CharField(max_length=150)
+    description = models.TextField(blank=True)
+    max_score = models.PositiveIntegerField()
+    status = models.IntegerField(choices=Status.choices, default=Status.DRAFT)
+    exam_date = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Imtihon - {self.title} ({self.lesson})"
+
+
+class ExamResult(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    exam = models.ForeignKey(
+        Exam,
+        on_delete=models.CASCADE,
+        related_name="results"
+    )
+    student = models.ForeignKey(
+        Student,
+        on_delete=models.CASCADE,
+        related_name="exam_results"
+    )
+    score = models.PositiveIntegerField()
+    graded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["exam", "student"],
+                name="unique_examresult_exam_student",
+            )
+        ]
+
+    def clean(self):
+        if self.score is not None and self.exam_id and self.score > self.exam.max_score:
+            raise ValidationError(
+                {"score": "Ball imtihonning maksimal balidan oshmasligi kerak."}
+            )
+
+    def __str__(self):
+        return f"{self.student} - {self.exam} - {self.score}"
 
 
 class StudentGamification(models.Model):

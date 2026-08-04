@@ -7,6 +7,8 @@ from .models import (
     Contract,
     HomeWork,
     StudentGamification,
+    Exam,
+    ExamResult,
 )
 
 
@@ -110,3 +112,35 @@ class StudentGamificationSerializer(serializers.ModelSerializer):
         model = StudentGamification
         fields = ["id", "student", "xp", "level"]
         read_only_fields = ["id"]
+
+
+class ExamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Exam
+        fields = [
+            "id",
+            "lesson",
+            "title",
+            "description",
+            "max_score",
+            "status",
+            "exam_date",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+
+
+class ExamResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExamResult
+        fields = ["id", "exam", "student", "score", "graded_at"]
+        read_only_fields = ["id", "graded_at"]
+
+    def validate(self, attrs):
+        exam = attrs.get("exam") or getattr(self.instance, "exam", None)
+        score = attrs.get("score")
+        if exam is not None and score is not None and score > exam.max_score:
+            raise serializers.ValidationError(
+                {"score": "Ball imtihonning maksimal balidan oshmasligi kerak."}
+            )
+        return attrs

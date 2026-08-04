@@ -10,6 +10,19 @@ class IsOwnerOrReadOnlyForStaff(BasePermission):
         return obj.owner_id == request.user.id or request.user.is_staff
 
 
+class IsStaffOrReadOnly(BasePermission):
+    """
+    O'qish (GET/HEAD/OPTIONS) har qanday autentifikatsiyadan o'tgan
+    foydalanuvchiga ruxsat etiladi, lekin yozish (POST/PUT/PATCH/DELETE)
+    faqat staff foydalanuvchilarga ruxsat etiladi.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return bool(request.user and request.user.is_authenticated)
+        return bool(request.user and request.user.is_authenticated and request.user.is_staff)
+
+
 class IsRelatedTeacherOwner(BasePermission):
 
     def has_permission(self, request, view):

@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from group.models import Group, Lessons
-from student.models import Student
+from students.models import Student
 from .models import (
     Teacher,
     Subject,
