@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 
+from common.permissions import IsAdmin, IsTeacher, IsStudent
 from .models import Student
 from .serializers import StudentSerializer, StudentCreateUpdateSerializer, TransferStudentSerializer
 from .services import StudentService
+
 
 
 def custom_response(data=None, message="", success=True, status_code=200):
@@ -24,6 +26,22 @@ class StudentViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['status']
     search_fields = ['first_name', 'last_name', 'phone_number', 'passport_number']
+
+    def get_queryset(self):
+        user = self.request.user
+
+        if getattr(user, 'role', None) == 'student':
+            return Student.objects.filter(user=user)
+
+        return Student.objects.all().order_by('-id')
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, (IsAdmin | IsTeacher | IsStudent)]
+        else:
+            permission_classes = [IsAuthenticated, IsAdmin]
+
+        return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
