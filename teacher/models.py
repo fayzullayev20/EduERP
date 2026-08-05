@@ -6,7 +6,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 
 from group.models import Lessons
-from students.models import Student
+from student.models import Student
 
 User = get_user_model()
 
