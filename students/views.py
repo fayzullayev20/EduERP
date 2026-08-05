@@ -31,7 +31,7 @@ class StudentViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if getattr(user, 'role', None) == 'student':
-            return Student.objects.filter(user=user)
+            return Student.objects.filter(owner=self.request.user)
 
         return Student.objects.all().order_by('-id')
 

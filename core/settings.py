@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'authentication',
     'users',
     'common',
+    'finance',
 ]
 
 MIDDLEWARE = [
