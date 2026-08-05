@@ -22,6 +22,6 @@ class StudentCreateUpdateSerializer(serializers.ModelSerializer):
         fields = ['owner', 'first_name', 'last_name', 'phone_number', 'passport_number', 'groups']
 
 
-class TransferStudentSerizalizer(serializers.Serializer):
+class TransferStudentSerializer(serializers.Serializer):
     current_group_id = serializers.IntegerField()
     target_group_id = serializers.IntegerField()

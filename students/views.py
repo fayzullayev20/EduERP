@@ -5,7 +5,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated
 
 from .models import Student
-from .serializers import StudentSerializer, StudentCreateUpdateSerializer, TransferStudentSerizalizer
+from .serializers import StudentSerializer, StudentCreateUpdateSerializer, TransferStudentSerializer
 from .services import StudentService
 
 
@@ -22,7 +22,7 @@ class StudentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['status', 'groups']
+    filterset_fields = ['status']
     search_fields = ['first_name', 'last_name', 'phone_number', 'passport_number']
 
     def get_serializer_class(self):
@@ -34,7 +34,7 @@ class StudentViewSet(viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = self.get_serializer(queryset, many=True)
+            serializer = self.get_serializer(page, many=True) # <-- Bu yerda 'page' bo'lishi kerak
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
