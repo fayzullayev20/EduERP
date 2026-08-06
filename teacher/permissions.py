@@ -11,12 +11,7 @@ class IsOwnerOrReadOnlyForStaff(BasePermission):
 
 
 class IsStaffOrReadOnly(BasePermission):
-    """
-    O'qish (GET/HEAD/OPTIONS) har qanday autentifikatsiyadan o'tgan
-    foydalanuvchiga ruxsat etiladi, lekin yozish (POST/PUT/PATCH/DELETE)
-    faqat staff foydalanuvchilarga ruxsat etiladi.
-    """
-
+    
     def has_permission(self, request, view):
         if request.method in SAFE_METHODS:
             return bool(request.user and request.user.is_authenticated)

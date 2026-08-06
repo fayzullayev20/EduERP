@@ -78,9 +78,6 @@ class MyTeacherProfileView(generics.RetrieveUpdateAPIView):
 class SubjectsView(generics.ListCreateAPIView):
     queryset = Subject.objects.all()
     serializer_class = SubjectSerializer
-    # HUJUM NUQTASI: har qanday autentifikatsiyadan o'tgan foydalanuvchi
-    # (masalan, student) umumiy Subject spravochnigini o'zgartira olardi.
-    # Endi o'qish hammaga, yozish faqat staff'ga ruxsat etiladi.
     permission_classes = [IsStaffOrReadOnly]
 
 
@@ -103,11 +100,6 @@ class TeacherWorkloadsView(TeacherScopedQuerysetMixin, generics.ListCreateAPIVie
         return qs
 
     def perform_create(self, serializer):
-        # HUJUM NUQTASI: "teacher" maydoni serializer'da yozilishi mumkin
-        # edi, shu sababli staff bo'lmagan foydalanuvchi o'zga o'qituvchi
-        # uchun workload yaratishi mumkin edi (cross-tenant IDOR). Endi
-        # staff bo'lmagan foydalanuvchi faqat o'ziga tegishli Teacher
-        # profili uchun yoza oladi.
         if not self.request.user.is_staff:
             own_teacher = _own_teacher(self.request)
             target_teacher = serializer.validated_data.get("teacher")
@@ -123,9 +115,6 @@ class TeacherWorkloadView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsRelatedTeacherOwner]
 
     def perform_update(self, serializer):
-        # HUJUM NUQTASI: staff bo'lmagan egasi "teacher" maydonini
-        # o'zgartirib, yozuvni boshqa o'qituvchiga "topshirib yuborishi"
-        # (yoki begona teacher'ga qayta bog'lashi) mumkin edi.
         new_teacher = serializer.validated_data.get("teacher")
         if new_teacher is not None and not self.request.user.is_staff:
             own_teacher = _own_teacher(self.request)
@@ -147,10 +136,6 @@ class TransactionsView(TeacherScopedQuerysetMixin, generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        # HUJUM NUQTASI: moliyaviy yozuv (maosh/bonus/jarima) staff
-        # bo'lmagan foydalanuvchi tomonidan istalgan teacher_id bilan
-        # yaratilishi mumkin edi. Endi faqat staff o'zga teacher uchun
-        # tranzaksiya yarata oladi.
         if not self.request.user.is_staff:
             raise PermissionDenied("Tranzaksiya yaratish faqat administratorlar uchun")
         serializer.save()
@@ -163,9 +148,6 @@ class TransactionView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [IsAuthenticated, IsRelatedTeacherOwner]
 
     def perform_update(self, serializer):
-        # Moliyaviy yozuvlarni faqat staff tahrirlay oladi; oddiy owner
-        # faqat o'qish huquqiga ega (IsRelatedTeacherOwner GET'ni ruxsat
-        # beradi, lekin yozishni bu yerda staff bilan cheklaymiz).
         if not self.request.user.is_staff:
             raise PermissionDenied("Tranzaksiyani tahrirlash faqat administratorlar uchun")
         serializer.save()
@@ -189,10 +171,6 @@ class ContractsView(TeacherScopedQuerysetMixin, generics.ListCreateAPIView):
         return qs
 
     def perform_create(self, serializer):
-        # HUJUM NUQTASI: shartnoma (fayl bilan) istalgan teacher_id
-        # ko'rsatilib, staff bo'lmagan foydalanuvchi tomonidan
-        # yaratilishi mumkin edi. Shartnoma yaratish/HR ishi bo'lgani
-        # uchun faqat staff'ga ruxsat beriladi.
         if not self.request.user.is_staff:
             raise PermissionDenied("Shartnoma yaratish faqat administratorlar uchun")
         serializer.save()
@@ -222,7 +200,7 @@ class HomeWorksView(TeacherScopedQuerysetMixin, generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = self.scope_to_teacher(HomeWork.objects.all().order_by("-created_at"))
-        qs = qs.distinct()  # workloads orqali join bo'lgani uchun takrorlanishning oldini olamiz
+        qs = qs.distinct()  
         lesson_id = self.request.query_params.get("lesson")
         if lesson_id:
             qs = qs.filter(lesson_id=lesson_id)
@@ -266,10 +244,6 @@ class HomeWorkView(generics.RetrieveUpdateDestroyAPIView):
 
 class StudentGamificationsView(generics.ListCreateAPIView):
     serializer_class = StudentGamificationSerializer
-    # HUJUM NUQTASI: bu endpoint hech qanday cheklovsiz edi — istalgan
-    # autentifikatsiyadan o'tgan foydalanuvchi (hatto student) o'zining
-    # yoki boshqa studentning XP/level qiymatini yaratishi/o'zgartirishi
-    # mumkin edi. Hozircha o'qish hammaga, yozish faqat staff'ga.
     permission_classes = [IsStaffOrReadOnly]
 
     def get_queryset(self):
@@ -293,7 +267,7 @@ class ExamsView(TeacherScopedQuerysetMixin, generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = self.scope_to_teacher(Exam.objects.all().order_by("-exam_date"))
-        qs = qs.distinct()  # workloads orqali join bo'lgani uchun takrorlanishning oldini olamiz
+        qs = qs.distinct()  
         lesson_id = self.request.query_params.get("lesson")
         if lesson_id:
             qs = qs.filter(lesson_id=lesson_id)
