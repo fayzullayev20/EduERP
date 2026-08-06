@@ -5,12 +5,12 @@ class Attendance(models.Model):
     date = models.DateTimeField()
 
     group = models.ForeignKey(
-        "group.Group",
+        "groups.Group",
         on_delete=models.CASCADE,
         related_name="attendances"
     )
     students = models.ManyToManyField(
-        "student.Student",
+        "students.Student",
         through="AttendanceRecord",
         related_name="attendances"
     )

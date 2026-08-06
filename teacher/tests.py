@@ -5,7 +5,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from group.models import Group, Lessons
+from groups.models import Group, Lessons
 from students.models import Student
 from .models import (
     Teacher,
@@ -50,20 +50,20 @@ class BaseTeacherTestCase(APITestCase):
         )
         self.teacher.subjects.add(self.subject_math)
 
-        # self.group = Group.objects.create(name="9-A")
+        self.group = Group.objects.create(name="9-A")
         
         # Qattiq sana o'rniga dinamik bugungi sana
         self.today = date.today()
-        # self.lesson = Lessons.objects.create(
-        #     group=self.group, date=self.today
-        # )
+        self.lesson = Lessons.objects.create(
+            group=self.group, date=self.today
+        )
         self.student_user = User.objects.create_user(
             username="sardor_student", password="testpass123", first_name="Sardor", last_name="Aliyev"
         )
-        # self.student = Student.objects.create(
-        #     first_name="Sardor", 
-        #     last_name="Aliyev"
-        # )
+        self.student = Student.objects.create(
+            first_name="Sardor", 
+            last_name="Aliyev"
+        )
 
 
 class SubjectAPITests(BaseTeacherTestCase):
@@ -253,16 +253,16 @@ class TeacherWorkloadAPITests(BaseTeacherTestCase):
         self.assertEqual(response.data[0]["teacher"], self.teacher.id)
 
     def test_create_workload(self):
-        # new_group = Group.objects.create(name="10-B")
+        new_group = Group.objects.create(name="10-B")
         self.client.force_authenticate(user=self.owner_user)
         url = reverse("workloads")
-        # payload = {
-        #     "teacher": self.teacher.id,
-        #     "group": new_group.id,
-        #     "hours_per_week": 8,
-        # }
-        # response = self.client.post(url, payload)
-        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        payload = {
+            "teacher": self.teacher.id,
+            "group": new_group.id,
+            "hours_per_week": 8,
+        }
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(TeacherWorkload.objects.count(), 2)
 
     def test_create_duplicate_workload_fails(self):
@@ -460,13 +460,13 @@ class HomeWorkAPITests(BaseTeacherTestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_filter_homeworks_by_lesson(self):
-        # other_lesson = Lessons.objects.create(group=self.group, date=self.today + timedelta(days=1))
-        # HomeWork.objects.create(
-        #     lesson=other_lesson,
-        #     description="Boshqa dars uy vazifasi",
-        #     max_score=50,
-        #     due_date=self.due_date,
-        # )
+        other_lesson = Lessons.objects.create(group=self.group, date=self.today + timedelta(days=1))
+        HomeWork.objects.create(
+            lesson=other_lesson,
+            description="Boshqa dars uy vazifasi",
+            max_score=50,
+            due_date=self.due_date,
+        )
         self.client.force_authenticate(user=self.owner_user)
         url = reverse("homeworks")
         response = self.client.get(url, {"lesson": self.lesson.id})
@@ -533,8 +533,8 @@ class StudentGamificationAPITests(BaseTeacherTestCase):
         self.assertEqual(len(response.data), 1)
 
     def test_filter_gamification_by_student(self):
-        # other_student = Student.objects.create(first_name="Laylo", last_name="Karimova")
-        # StudentGamification.objects.create(student=other_student, xp=10, level=1)
+        other_student = Student.objects.create(first_name="Laylo", last_name="Karimova")
+        StudentGamification.objects.create(student=other_student, xp=10, level=1)
 
         self.client.force_authenticate(user=self.owner_user)
         url = reverse("gamifications")
@@ -544,12 +544,12 @@ class StudentGamificationAPITests(BaseTeacherTestCase):
         self.assertEqual(response.data[0]["xp"], 150)
 
     def test_create_gamification(self):
-        # new_student = Student.objects.create(first_name="Jasur", last_name="Toshev")
+        new_student = Student.objects.create(first_name="Jasur", last_name="Toshev")
         self.client.force_authenticate(user=self.owner_user)
         url = reverse("gamifications")
-        # payload = {"student": new_student.id, "xp": 0, "level": 1}
-        # response = self.client.post(url, payload)
-        # self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        payload = {"student": new_student.id, "xp": 0, "level": 1}
+        response = self.client.post(url, payload)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(StudentGamification.objects.count(), 2)
 
     def test_create_duplicate_gamification_for_same_student_fails(self):
