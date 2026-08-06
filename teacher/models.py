@@ -5,8 +5,8 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from group.models import Lessons
-from student.models import Student
+# from group.models import Lessons
+# from student.models import Student
 
 User = get_user_model()
 
@@ -145,11 +145,11 @@ class HomeWork(models.Model):
         CLOSED = 2, "Closed"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    lesson = models.ForeignKey(
-        Lessons,
-        on_delete=models.CASCADE,
-        related_name="homeworks"
-    )
+    # lesson = models.ForeignKey(
+    #     Lessons,
+    #     on_delete=models.CASCADE,
+    #     related_name="homeworks"
+    # )
     description = models.TextField()
     max_score = models.PositiveIntegerField()
     status = models.IntegerField(choices=Status.choices, default=Status.DRAFT)
@@ -168,11 +168,11 @@ class Exam(models.Model):
         CLOSED = 2, "Closed"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    lesson = models.ForeignKey(
-        Lessons,
-        on_delete=models.CASCADE,
-        related_name="exams"
-    )
+    # lesson = models.ForeignKey(
+    #     Lessons,
+    #     on_delete=models.CASCADE,
+    #     related_name="exams"
+    # )
     title = models.CharField(max_length=150)
     description = models.TextField(blank=True)
     max_score = models.PositiveIntegerField()
@@ -191,11 +191,11 @@ class ExamResult(models.Model):
         on_delete=models.CASCADE,
         related_name="results"
     )
-    student = models.ForeignKey(
-        Student,
-        on_delete=models.CASCADE,
-        related_name="exam_results"
-    )
+    # student = models.ForeignKey(
+    #     Student,
+    #     on_delete=models.CASCADE,
+    #     related_name="exam_results"
+    # )
     score = models.PositiveIntegerField()
     graded_at = models.DateTimeField(auto_now_add=True)
 
@@ -219,11 +219,11 @@ class ExamResult(models.Model):
 
 class StudentGamification(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    student = models.OneToOneField(
-        Student,
-        on_delete=models.CASCADE,
-        related_name="gamification"
-    )
+    # student = models.OneToOneField(
+    #     Student,
+    #     on_delete=models.CASCADE,
+    #     related_name="gamification"
+    # )
     xp = models.PositiveIntegerField(default=0)
     level = models.PositiveIntegerField(default=0)
 
