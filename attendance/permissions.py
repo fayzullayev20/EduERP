@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission
-from teacher.models import Teacher
+from teachers.models import Teacher
 
 
 class IsGroupTeacher(BasePermission):

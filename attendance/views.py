@@ -11,7 +11,7 @@ from .serializers import (
     AttendanceRecordSerializer,
 )
 from .permissions import IsGroupTeacher
-from teacher.models import Teacher
+from teachers.models import Teacher
 
 
 class AttendancesView(generics.ListCreateAPIView):
