@@ -72,7 +72,7 @@ class TeacherWorkload(models.Model):
         related_name="workloads"
     )
     group = models.ForeignKey(
-        "group.Group",
+        "groups.Group",
         on_delete=models.CASCADE,
         related_name="workloads"
     )
@@ -145,11 +145,11 @@ class HomeWork(models.Model):
         CLOSED = 2, "Closed"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    lesson = models.ForeignKey(
-        Lessons,
-        on_delete=models.CASCADE,
-        related_name="homeworks"
-    )
+    # lesson = models.ForeignKey(
+    #     Lessons,
+    #     on_delete=models.CASCADE,
+    #     related_name="homeworks"
+    # )
     description = models.TextField()
     max_score = models.PositiveIntegerField()
     status = models.IntegerField(choices=Status.choices, default=Status.DRAFT)
@@ -168,11 +168,11 @@ class Exam(models.Model):
         CLOSED = 2, "Closed"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    lesson = models.ForeignKey(
-        Lessons,
-        on_delete=models.CASCADE,
-        related_name="exams"
-    )
+    # lesson = models.ForeignKey(
+    #     Lessons,
+    #     on_delete=models.CASCADE,
+    #     related_name="exams"
+    # )
     title = models.CharField(max_length=150)
     description = models.TextField(blank=True)
     max_score = models.PositiveIntegerField()

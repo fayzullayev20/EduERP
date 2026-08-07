@@ -26,7 +26,7 @@ class AttendanceRecord(models.Model):
         related_name="records"
     )
     student = models.ForeignKey(
-        "student.Student",
+        "students.Student",
         on_delete=models.CASCADE,
         related_name="attendance_records"
     )
