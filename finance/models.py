@@ -1,110 +1,19 @@
 from django.db import models
-<<<<<<< HEAD
-from decimal import Decimal
-
-
-class StudentPayment(models.Model):
-    STATUS_CHOICES = (
-        ('unpaid', 'To\'lanmagan'),
-        ('partial', 'Qisman to\'langan'),
-        ('paid', 'To\'liq to\'langan'),
-    )
-
-    student = models.ForeignKey('students.Student', on_delete=models.CASCADE, related_name='payments')
-    group = models.ForeignKey('groups.Group', on_delete=models.CASCADE, related_name='student_payments')
-    month = models.DateField(help_text="To'lov oyi (masalan, 2026-08-01)")
-    
-    course_price = models.DecimalField(max_digits=12, decimal_places=2, help_text="12 darslik to'liq kurs narxi")
-    total_lessons = models.PositiveIntegerField(default=12, help_text="Bir oydagi rejalashtirilgan standart darslar soni")
-    attended_lessons = models.PositiveIntegerField(default=0, help_text="Talaba amalda qatnashgan darslar soni")
-    
-    calculated_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Davomatga ko'ra hisoblangan summa")
-    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Talaba amalda to'lagan summa")
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='unpaid')
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('student', 'group', 'month')
-
-    def calculate_amount(self):
-        if self.total_lessons > 0:
-            one_lesson_price = Decimal(self.course_price) / Decimal(self.total_lessons)
-            return round(one_lesson_price * Decimal(self.attended_lessons), 2)
-        return Decimal('0.00')
-
-    def save(self, *args, **kwargs):
-        self.calculated_amount = self.calculate_amount()
-        
-        if self.paid_amount >= self.calculated_amount and self.calculated_amount > 0:
-            self.status = 'paid'
-        elif self.paid_amount > 0:
-            self.status = 'partial'
-        else:
-            self.status = 'unpaid'
-            
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.student} - {self.group.name} ({self.month.strftime('%Y-%m')})"
-
-
-class TeacherSalary(models.Model):
-    STATUS_CHOICES = (
-        ('pending', 'Kutilmoqda'),
-        ('paid', 'To\'langan'),
-    )
-
-    teacher = models.ForeignKey('teacher.Teacher', on_delete=models.CASCADE, related_name='salaries')
-    group = models.ForeignKey('groups.Group', on_delete=models.CASCADE, related_name='teacher_salaries')
-    month = models.DateField(help_text="Maosh oyi (masalan, 2026-08-01)")
-    
-    base_salary = models.DecimalField(max_digits=12, decimal_places=2, help_text="12 dars o'tilganda beriladigan to'liq oylik")
-    total_lessons = models.PositiveIntegerField(default=12, help_text="Bir oydagi rejalashtirilgan darslar soni")
-    conducted_lessons = models.PositiveIntegerField(default=0, help_text="O'qituvchi amalda o'tgan darslar soni")
-    
-    calculated_salary = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="O'tilgan darslarga ko'ra hisoblangan maosh")
-    paid_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
-    
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ('teacher', 'group', 'month')
-
-    def calculate_salary(self):
-        if self.total_lessons > 0:
-            one_lesson_rate = Decimal(self.base_salary) / Decimal(self.total_lessons)
-            return round(one_lesson_rate * Decimal(self.conducted_lessons), 2)
-        return Decimal('0.00')
-
-    def save(self, *args, **kwargs):
-        self.calculated_salary = self.calculate_salary()
-        
-        if self.paid_amount >= self.calculated_salary and self.calculated_salary > 0:
-            self.status = 'paid'
-        else:
-            self.status = 'pending'
-            
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.teacher} - {self.group.name} ({self.month.strftime('%Y-%m')})"
-=======
 from django.conf import settings
-
 from students.models import Student
 
 
 class Category(models.Model):
-    TRANSACTION_TYPES = (
+    TYPE_CHOICES = (
         ('income', 'Kirim'),
         ('expense', 'Chiqim'),
     )
+
     name = models.CharField(max_length=100)
-    type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+
+    class Meta:
+        verbose_name_plural = "Categories"
 
     def __str__(self):
         return f"{self.name} ({self.get_type_display()})"
@@ -113,46 +22,114 @@ class Category(models.Model):
 class Transaction(models.Model):
     PAYMENT_METHODS = (
         ('cash', 'Naqd'),
-        ('card', 'Karta / P2P'),
-        ('bank', 'Bank o\'tkazmasi'),
-        ('click_payme', 'Click / Payme'),
+        ('card', 'Karta'),
+        ('bank_transfer', 'Bank o\'tkazmasi'),
     )
 
     title = models.CharField(max_length=255)
     amount = models.DecimalField(max_digits=12, decimal_places=2)
-    category = models.ForeignKey(Category, on_delete=models.PROTECT, related_name='transactions')
-    payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='cash')
+    category = models.ForeignKey(
+        Category, 
+        on_delete=models.PROTECT, 
+        related_name='transactions'
+    )
+    payment_method = models.CharField(
+        max_length=20, 
+        choices=PAYMENT_METHODS, 
+        default='cash'
+    )
     date = models.DateTimeField(auto_now_add=True)
-    description = models.TextField(blank=True, null=True)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    description = models.TextField(blank=True, default="")
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='created_transactions'
+    )
 
     def __str__(self):
-        return f"{self.title} - {self.amount} UZS"
+        return f"{self.title} - {self.amount}"
 
 
 class Payment(models.Model):
-    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='payments')
-    transaction = models.OneToOneField(Transaction, on_delete=models.CASCADE, related_name='payment_details')
-    month_for = models.DateField(help_text="Qaysi oy uchun to'lov qilingani (masalan: 2026-08-01)")
-
-    def __str__(self):
-        return f"{self.student} - {self.transaction.amount} UZS"
-
-
-class TeacherSalary(models.Model):
-    teacher = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
+    student = models.ForeignKey(
+        Student, 
         on_delete=models.CASCADE, 
-        related_name='salaries',
-        limit_choices_to={'role': 'teacher'}
+        related_name='payments'
     )
     transaction = models.OneToOneField(
         Transaction, 
         on_delete=models.CASCADE, 
-        related_name='salary_details'
+        related_name='payment'
     )
-    for_month = models.DateField(help_text="Qaysi oy uchun oylik berilayotgani (masalan: 2026-08-01)")
+    month_for = models.DateField()
 
     def __str__(self):
-        return f"{self.teacher.get_full_name() or self.teacher.username} - {self.transaction.amount} UZS ({self.for_month})"
->>>>>>> fe439967a4c9f5b0fe6a6889a838d7af247ac1c1
+        return f"{self.student} - {self.month_for}"
+
+
+class StudentPayment(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Kutilmoqda'),
+        ('paid', 'To\'langan'),
+        ('cancelled', 'Bekor qilingan'),
+    )
+
+    student = models.ForeignKey(
+        Student, 
+        on_delete=models.CASCADE, 
+        related_name='student_payments'
+    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    calculated_amount = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        default=0
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.student} - {self.amount} ({self.status})"
+
+
+class TeacherSalary(models.Model):
+    STATUS_CHOICES = (
+        ('pending', 'Kutilmoqda'),
+        ('paid', 'To\'langan'),
+    )
+
+    teacher = models.ForeignKey(
+        settings.AUTH_USER_MODEL, 
+        on_delete=models.CASCADE, 
+        related_name='teacher_salaries'
+    )
+    transaction = models.OneToOneField(
+        Transaction, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='teacher_salary'
+    )
+    for_month = models.DateField()
+    calculated_salary = models.DecimalField(
+        max_digits=12, 
+        decimal_places=2, 
+        default=0
+    )
+    status = models.CharField(
+        max_length=20, 
+        choices=STATUS_CHOICES, 
+        default='pending'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.teacher} - {self.for_month}"

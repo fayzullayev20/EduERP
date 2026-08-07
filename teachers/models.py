@@ -5,7 +5,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from groups.models import Group
+from groups.models import Group, Lessons
 from students.models import Student
 
 User = get_user_model()
@@ -145,11 +145,11 @@ class HomeWork(models.Model):
         CLOSED = 2, "Closed"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    # lesson = models.ForeignKey(
-    #     Lessons,
-    #     on_delete=models.CASCADE,
-    #     related_name="homeworks"
-    # )
+    lesson = models.ForeignKey(
+        Lessons,
+        on_delete=models.CASCADE,
+        related_name="homeworks"
+    )
     description = models.TextField()
     max_score = models.PositiveIntegerField()
     status = models.IntegerField(choices=Status.choices, default=Status.DRAFT)

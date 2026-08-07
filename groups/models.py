@@ -24,7 +24,7 @@ class Group(models.Model):
     room = models.UUIDField(default=uuid.uuid4, editable=False)
     max_student = models.IntegerField(default=20)
     teacher = models.ForeignKey(
-        'teacher.Teacher', 
+        'teachers.Teacher', 
         on_delete=models.SET_NULL, 
         null=True, 
         related_name='groups'
@@ -45,7 +45,7 @@ class Group(models.Model):
 
 
 class Lessons(models.Model):
-    group = models.ForeignKey('groups.Group', on_delete=models.CASCADE, related_name='lessons')
+    group = models.ForeignKey('groups.Group', on_delete=models.CASCADE, null=True, related_name='lessons')
     title = models.CharField(max_length=255)
     date = models.DateField()
     is_conducted = models.BooleanField(default=False)

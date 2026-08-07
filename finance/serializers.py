@@ -1,26 +1,8 @@
-from rest_framework import serializers
-<<<<<<< HEAD
-from .models import StudentPayment, TeacherSalary
-
-
-class StudentPaymentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StudentPayment
-        fields = '__all__'
-        read_only_fields = ('calculated_amount', 'status', 'created_at', 'updated_at')
-
-
-class TeacherSalarySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TeacherSalary
-        fields = '__all__'
-        read_only_fields = ('calculated_salary', 'status', 'created_at', 'updated_at')
-=======
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
 
 from students.models import Student
-from students.serializers import StudentSerializer
-from .models import Category, Transaction, Payment, TeacherSalary
+from .models import Category, Transaction, Payment, TeacherSalary, StudentPayment
 
 User = get_user_model()
 
@@ -73,6 +55,13 @@ class PaymentCreateSerializer(serializers.Serializer):
         return value
 
 
+class StudentPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentPayment
+        fields = '__all__'
+        read_only_fields = ('calculated_amount', 'status', 'created_at', 'updated_at')
+
+
 class TeacherSalarySerializer(serializers.ModelSerializer):
     transaction = TransactionSerializer(read_only=True)
     teacher_name = serializers.CharField(source='teacher.get_full_name', read_only=True)
@@ -103,4 +92,3 @@ class TeacherSalaryCreateSerializer(serializers.Serializer):
         if not Category.objects.filter(id=value, type='expense').exists():
             raise serializers.ValidationError("Tanlangan kategoriya topilmadi yoki u 'Chiqim' (expense) turiga tegishli emas.")
         return value
->>>>>>> fe439967a4c9f5b0fe6a6889a838d7af247ac1c1
