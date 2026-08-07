@@ -42,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-<<<<<<< HEAD
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_spectacular',
@@ -55,18 +54,6 @@ INSTALLED_APPS = [
     'students',
     'teacher',
     'users',
-=======
-
-    'attendance.apps.AttendanceConfig',
-    'authentication.apps.AuthenticationConfig',
-    'common.apps.CommonConfig',
-    'finance.apps.FinanceConfig',
-    'groups.apps.GroupsConfig',
-    'students.apps.StudentsConfig',
-    'teachers.apps.TeacherConfig',
-    'users.apps.UsersConfig',
-    
->>>>>>> fe439967a4c9f5b0fe6a6889a838d7af247ac1c1
 ]
 
 MIDDLEWARE = [
@@ -154,11 +141,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-<<<<<<< HEAD
-=======
-
-
->>>>>>> fe439967a4c9f5b0fe6a6889a838d7af247ac1c1
 
 
 REST_FRAMEWORK = {
@@ -186,7 +168,6 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
-<<<<<<< HEAD
 SPECTACULAR_SETTINGS = {
     'TITLE': 'EduERP API',
     'DESCRIPTION': 'EduERP o\'quv markazini boshqarish tizimi API hujjatlari',
@@ -195,6 +176,3 @@ SPECTACULAR_SETTINGS = {
 }
 
 AUTH_USER_MODEL = "users.User"
-=======
-AUTH_USER_MODEL = "users.User"
->>>>>>> fe439967a4c9f5b0fe6a6889a838d7af247ac1c1
