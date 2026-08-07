@@ -5,8 +5,9 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Group
 from .serializers import GroupSerializer, AssignTeacherSerializer, AddStudentSerializer
-from teachers.models import Teacher
+from teacher.models import Teacher
 from students.models import Student
+
 
 class GroupViewSet(viewsets.ModelViewSet):
     serializer_class = GroupSerializer

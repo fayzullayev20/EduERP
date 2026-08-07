@@ -5,7 +5,7 @@ from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from groups.models import Group
+from groups.models import Group, Lessons
 from students.models import Student
 
 User = get_user_model()
@@ -72,7 +72,7 @@ class TeacherWorkload(models.Model):
         related_name="workloads"
     )
     group = models.ForeignKey(
-        "group.Group",
+        "groups.Group",
         on_delete=models.CASCADE,
         related_name="workloads"
     )

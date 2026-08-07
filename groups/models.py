@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator
 
+
 class GroupDays(models.TextChoices):
     ODD_DAYS = 'ODD', 'Toq kunlar'
     EVEN_DAYS = 'EVEN', 'Juft kunlar'
@@ -23,7 +24,7 @@ class Group(models.Model):
     room = models.CharField(max_length=100)
     max_student = models.IntegerField(default=20, validators=[MinValueValidator(1)])
     teacher = models.ForeignKey(
-        'teachers.Teacher', 
+        'teacher.Teacher', 
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True,
@@ -42,3 +43,14 @@ class Group(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Lessons(models.Model):
+    group = models.ForeignKey('groups.Group', on_delete=models.CASCADE, related_name='lessons')
+    title = models.CharField(max_length=255)
+    date = models.DateField()
+    is_conducted = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.group.name} - {self.title} ({self.date})"

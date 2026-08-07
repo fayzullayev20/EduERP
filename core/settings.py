@@ -27,22 +27,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'groups',
-    'groups.apps.GroupsConfig',
-    'students.apps.StudentsConfig',
-    'teachers.apps.TeachersConfig',
-    
-    "authentication",
-    "users",
-    "common",
-    "finance",
-    "students",
-    'teacher',
-    'attendance',
+    'rest_framework',
+    'rest_framework_simplejwt.token_blacklist',
+    'drf_spectacular',
 
-    "rest_framework",
-    "rest_framework_simplejwt.token_blacklist",
-    
+    'attendance',
+    'authentication',
+    'common',
+    'finance',
+    'groups',
+    'students',
+    'teacher',
+    'users',
 ]
 
 MIDDLEWARE = [
@@ -128,6 +124,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
     ),
+    "DEFAULT_SCHEMA_CLASS": 'drf_spectacular.openapi.AutoSchema'
 }
 
 SIMPLE_JWT = {
@@ -143,6 +140,13 @@ SIMPLE_JWT = {
     "SIGNING_KEY": SECRET_KEY,
 
     "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'EduERP API',
+    'DESCRIPTION': 'EduERP o\'quv markazini boshqarish tizimi API hujjatlari',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 AUTH_USER_MODEL = "users.User"
