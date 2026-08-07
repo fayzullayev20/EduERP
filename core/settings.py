@@ -28,6 +28,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'groups',
+    'groups.apps.GroupsConfig',
+    'students.apps.StudentsConfig',
+    'teachers.apps.TeachersConfig',
+    
     "authentication",
     "users",
     "common",
