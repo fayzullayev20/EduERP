@@ -2,7 +2,7 @@
 
 import django.core.validators
 import django.db.models.deletion
-import teacher.models
+import teachers.models
 import uuid
 from django.conf import settings
 from django.db import migrations, models
@@ -80,7 +80,7 @@ class Migration(migrations.Migration):
                 ('number', models.CharField(max_length=50, unique=True)),
                 ('start_date', models.DateField()),
                 ('end_date', models.DateField(blank=True, null=True)),
-                ('file', models.FileField(blank=True, null=True, upload_to='contracts/', validators=[django.core.validators.FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), teacher.models.validate_contract_file_size])),
+                ('file', models.FileField(blank=True, null=True, upload_to='contracts/', validators=[django.core.validators.FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), teachers.models.validate_contract_file_size])),
                 ('is_active', models.BooleanField(default=True)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('teacher', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='contracts', to='teacher.teacher')),
